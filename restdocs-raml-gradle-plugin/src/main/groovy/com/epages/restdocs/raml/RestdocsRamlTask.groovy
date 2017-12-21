@@ -92,10 +92,9 @@ class RestdocsRamlTask extends DefaultTask {
 
             def ramlVersionString = ramlVersion.get() == ramlVersionSetting08 ? version08 : version10
             writer.write("$ramlVersionString\n")
-            if (apiTitle.isPresent()) {
-                writer.write("title: ${apiTitle.get()}\n")
-            }
-            if (apiBaseUri.isPresent()) {
+            writer.write("title: ${apiTitle.getOrElse("API documentation")}\n")
+
+            if (apiBaseUri.getOrElse(null) != null) {
                 writer.write("baseUri: ${apiBaseUri.get()}\n")
             }
             ramlFragmentsList.each { fragments ->

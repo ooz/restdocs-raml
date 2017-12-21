@@ -26,6 +26,17 @@ class RestdocsRamlTaskTest extends Specification {
             thenRequestBodyJsonFileFoundInOutputDirectory()
     }
 
+    def "should aggregate raml fragments with empty config"() {
+        given:
+            givenTaskWithoutExtensionProperties()
+            givenSnippetFiles()
+            givenRequestBodyJsonFile()
+        when:
+            restdocsRamlTask.aggregateRamlFragments()
+        then:
+            thenApiRamlFileGenerated("#%RAML 1.0", true)
+    }
+
     def "should aggregate raml fragments with version 1.0"() {
         given:
           givenTask("1.0", false)
@@ -34,9 +45,8 @@ class RestdocsRamlTaskTest extends Specification {
         when:
           restdocsRamlTask.aggregateRamlFragments()
         then:
-          thenApiRamlFileGenerated("#%RAML 1.0")
-          thenGroupFileGenerated()
-          thenRequestBodyJsonFileFoundInOutputDirectory()
+            thenApiRamlFileGenerated("#%RAML 1.0")
+
     }
 
     private void thenRequestBodyJsonFileFoundInOutputDirectory() {
@@ -60,13 +70,15 @@ class RestdocsRamlTaskTest extends Specification {
             assert new File(testProjectDir.root, "build/ramldoc/carts-public.raml").exists()
     }
 
-    private void thenApiRamlFileGenerated(String expectedVersion) {
+    private void thenApiRamlFileGenerated(String expectedVersion, Boolean skipConfiguredFieldsCheck = false) {
         def apiFile = new File(testProjectDir.root, "build/ramldoc/api.raml")
         def lines = apiFile.readLines()
         assert apiFile.exists()
         assert lines.any { it == expectedVersion }
-        assert lines.any { it.startsWith("title:") }
-        assert lines.any { it.startsWith("baseUri:") }
+        if (!skipConfiguredFieldsCheck) {
+            assert lines.any { it.startsWith("title:") }
+            assert lines.any { it.startsWith("baseUri:") }
+        }
         assert lines.any() { it == "/carts: !include carts.raml" }
     }
 
@@ -110,6 +122,14 @@ class RestdocsRamlTaskTest extends Specification {
         project.extensions.ramldoc.apiTitle = "mytitle"
         project.extensions.ramldoc.apiBaseUri = "http://localhost/api"
         project.extensions.ramldoc.separatePublicApi = separatePublicApi
+        restdocsRamlTask = project.tasks.ramldoc as RestdocsRamlTask
+    }
+
+    private def givenTaskWithoutExtensionProperties() {
+        Project project = ProjectBuilder.builder()
+                .withProjectDir(testProjectDir.root)
+                .build()
+        project.pluginManager.apply 'com.epages.restdocs-raml'
         restdocsRamlTask = project.tasks.ramldoc as RestdocsRamlTask
     }
 }
