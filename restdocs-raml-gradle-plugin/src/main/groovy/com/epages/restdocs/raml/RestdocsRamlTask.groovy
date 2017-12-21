@@ -3,6 +3,7 @@ package com.epages.restdocs.raml
 import org.gradle.api.DefaultTask
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
 
 import java.nio.file.Files
@@ -15,8 +16,10 @@ class RestdocsRamlTask extends DefaultTask {
     @Input
     Property<String> ramlVersion = project.objects.property(String)
     @Input
+    @Optional
     Property<String> apiBaseUri = project.objects.property(String)
     @Input
+    @Optional
     Property<String> apiTitle = project.objects.property(String)
     @Input
     Property<Boolean> separatePublicApi =  project.objects.property(Boolean)
@@ -94,7 +97,7 @@ class RestdocsRamlTask extends DefaultTask {
             writer.write("$ramlVersionString\n")
             writer.write("title: ${apiTitle.getOrElse("API documentation")}\n")
 
-            if (apiBaseUri.getOrElse(null) != null) {
+            if (apiBaseUri.isPresent()) {
                 writer.write("baseUri: ${apiBaseUri.get()}\n")
             }
             ramlFragmentsList.each { fragments ->
